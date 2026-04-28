@@ -7,6 +7,8 @@ import {
   ShieldCheck, Sparkles, Search, SlidersHorizontal,
   Clock, FileText, HandHeart, Users, MapPin
 } from "lucide-react";
+import { db } from "../firebase";
+import { collection, onSnapshot } from "firebase/firestore";
 
 function useInView(threshold = 0.1) {
   const ref = useRef(null);
@@ -22,110 +24,23 @@ function useInView(threshold = 0.1) {
   return [ref, inView];
 }
 
-const CATS = [
-  {
-    id: 1,
-    name: "Mochi",
-    age: "2 yrs",
-    gender: "Female",
-    condition: "Three-legged",
-    conditionIcon: Activity,
-    status: "Ready to Adopt",
-    category: "ready",
-    personality: "Playful & curious",
-    color: "Orange tabby",
-    img: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=600&h=600&fit=crop&auto=format",
-    story: "Mochi came to us after a road accident left her with a missing front leg. After months of physiotherapy and love, she's learned to run, jump, and play just like any other cat. She absolutely adores feather toys and will follow you from room to room just to be close.",
-    medicalNeeds: "Monthly check-in with vet, no medications required. Mobility is excellent.",
-    personality_full: "Mochi is bold, confident, and incredibly loving. She greets every visitor with a headbutt and loves to sit in laps. She gets along with calm dogs and other cats.",
-    tags: ["Lap cat", "Kid-friendly", "Social"],
-  },
-  {
-    id: 2,
-    name: "Lumen",
-    age: "4 yrs",
-    gender: "Male",
-    condition: "One-eyed",
-    conditionIcon: Eye,
-    status: "Ready to Adopt",
-    category: "ready",
-    personality: "Gentle & affectionate",
-    color: "Black & white",
-    img: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&h=600&fit=crop&auto=format",
-    story: "Lumen lost his left eye to an infection before he was rescued, but it hasn't dimmed his spirit one bit. He's a calm, deeply affectionate cat who loves quiet evenings and gentle petting sessions.",
-    medicalNeeds: "Occasional eye drops for his remaining eye. Easy to administer, takes about 30 seconds.",
-    personality_full: "Lumen is the definition of a gentle soul. He's perfect for a quiet household or a first-time cat owner. He bonds deeply with his person and will wait by the door when you're away.",
-    tags: ["Quiet home", "First-time owner", "Bonding"],
-  },
-  {
-    id: 3,
-    name: "Pebble",
-    age: "1 yr",
-    gender: "Female",
-    condition: "Deaf",
-    conditionIcon: Volume2,
-    status: "In Rehabilitation",
-    category: "ongoing",
-    personality: "Bold & adventurous",
-    color: "Grey tabby",
-    img: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&h=600&fit=crop&auto=format",
-    story: "Pebble was born deaf and found on the streets at just 6 weeks old. What she lacks in hearing she makes up for in personality — she communicates entirely through body language and eye contact, and she's absolutely fearless.",
-    medicalNeeds: "No medications needed. Communication through visual cues — we'll teach you everything!",
-    personality_full: "Pebble is vibrant, fearless, and full of life. She loves exploring, playing with crinkle balls, and 'talking' with her big green eyes. She'd thrive in an active household.",
-    tags: ["Active home", "Visual cues", "Playful"],
-  },
-  {
-    id: 4,
-    name: "Thistle",
-    age: "6 yrs",
-    gender: "Male",
-    condition: "Cerebellar Hypoplasia",
-    conditionIcon: Activity,
-    status: "Ready to Adopt",
-    category: "ready",
-    personality: "Quiet & loving",
-    color: "Cream & white",
-    img: "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=600&h=600&fit=crop&auto=format",
-    story: "Thistle has cerebellar hypoplasia, which gives him a signature wobbly walk that everyone falls in love with. Despite his unsteady gait, he lives a full and happy life and requires only minor accommodations.",
-    medicalNeeds: "Low-sided litter box, non-slip mats recommended. No medications required.",
-    personality_full: "Thistle is calm, meditative, and deeply affectionate. He's a true lap cat who thrives in quiet environments. He loves classical music and slow mornings.",
-    tags: ["Quiet home", "Senior-friendly", "Special needs"],
-  },
-  {
-    id: 5,
-    name: "Hazel",
-    age: "3 yrs",
-    gender: "Female",
-    condition: "FIV Positive",
-    conditionIcon: ShieldCheck,
-    status: "Ready to Adopt",
-    category: "special",
-    personality: "Sweet & shy",
-    color: "Tortoiseshell",
-    img: "https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=600&h=600&fit=crop&auto=format",
-    story: "Hazel is FIV positive, which sounds scary but really just means she needs to be an only cat or live with other FIV+ cats. She's perfectly healthy and can live a long, full life with the right family.",
-    medicalNeeds: "Twice-yearly vet visits. Indoor only. No special medications — just love.",
-    personality_full: "Hazel is initially shy but opens up beautifully once she trusts you. She loves gentle brushing sessions and sleeping under blankets. She'll choose you as her whole world.",
-    tags: ["Only cat", "Indoor only", "Gentle home"],
-  },
-  {
-    id: 6,
-    name: "Cosmo",
-    age: "5 yrs",
-    gender: "Male",
-    condition: "Limb difference",
-    conditionIcon: Activity,
-    status: "Ongoing Care",
-    category: "ongoing",
-    personality: "Regal & curious",
-    color: "Silver tabby",
-    img: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=600&h=600&fit=crop&auto=format",
-    story: "Cosmo arrived with a congenital limb difference in his right hind leg. He's currently undergoing physical therapy and doing incredibly well. We expect him to be ready for adoption within 2 months.",
-    medicalNeeds: "Weekly physiotherapy sessions (we cover costs until adoption). Monitor for swelling.",
-    personality_full: "Cosmo is regal, quietly curious, and surprisingly chatty. He'll narrate your morning coffee routine and supervise every task with great authority.",
-    tags: ["Ongoing PT", "Coming soon", "Chatty"],
-  },
-];
+// Map a condition string to a lucide icon
+function getConditionIcon(condition = "") {
+  const c = condition.toLowerCase();
+  if (c.includes("eye") || c.includes("blind")) return Eye;
+  if (c.includes("deaf") || c.includes("hear")) return Volume2;
+  if (c.includes("fiv") || c.includes("shield") || c.includes("immune")) return ShieldCheck;
+  return Activity;
+}
+
+// Map admin status to adopt page category
+function getCategory(status = "") {
+  if (status === "Ready to Adopt") return "ready";
+  if (status === "In Rehabilitation") return "ongoing";
+  if (status === "Ongoing Care") return "ongoing";
+  return "special";
+}
+
 
 const FILTERS = [
   { id: "all",      label: "All Cats",       icon: PawPrint    },
@@ -424,6 +339,27 @@ export default function AdoptPage() {
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState(null);
   const [showAuthGate, setShowAuthGate] = useState(false);
+  const [cats, setCats] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Real-time listener from Firestore — same collection the admin writes to
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "cats"), (snapshot) => {
+      const data = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+        conditionIcon: getConditionIcon(d.data().condition),
+        category: getCategory(d.data().status),
+        personality: d.data().personality || d.data().story || "",
+        personality_full: d.data().personality || d.data().story || "",
+        medicalNeeds: d.data().medicalNeeds || "Please contact us for medical details.",
+        tags: d.data().tags || [],
+      }));
+      setCats(data);
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
 
   // Helper — returns true if logged in
   // Swap this out for your real auth check (context, zustand, etc.)
@@ -438,7 +374,7 @@ export default function AdoptPage() {
     }
   };
 
-  const filtered = CATS.filter((c) => {
+  const filtered = cats.filter((c) => {
     const matchFilter = activeFilter === "all" || c.category === activeFilter;
     const matchSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -487,7 +423,7 @@ export default function AdoptPage() {
             <div>
               <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-semibold px-4 py-2 rounded-full mb-8 tracking-wide">
                 <PawPrint className="w-3.5 h-3.5" />
-                {CATS.filter(c => c.status === "Ready to Adopt").length} cats waiting for a home
+                {cats.filter(c => c.status === "Ready to Adopt").length} cats waiting for a home
               </div>
               <h1 className="display text-5xl md:text-6xl xl:text-7xl font-bold leading-[1.08] text-slate-800 mb-6">
                 Find Your{" "}
@@ -591,10 +527,17 @@ export default function AdoptPage() {
           </div>
 
           <p className="text-slate-400 text-xs font-semibold mb-6 uppercase tracking-wide">
-            Showing {filtered.length} of {CATS.length} cats
+            Showing {filtered.length} of {cats.length} cats
           </p>
 
-          {filtered.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-24">
+              <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <PawPrint className="w-7 h-7 text-blue-300" />
+              </div>
+              <p className="text-slate-400 font-semibold">Loading cats...</p>
+            </div>
+          ) : filtered.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filtered.map((cat, i) => (
                 <CatCard key={cat.id} cat={cat} index={i} onClick={setSelectedCat} />

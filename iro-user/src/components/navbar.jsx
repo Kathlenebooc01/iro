@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Menu, X, PawPrint, Heart, User, LogOut, ChevronDown } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/iro-logo.png";
+import { auth } from "../firebase";
+import { signOut } from "firebase/auth";
 
 const NAV_LINKS = [
   { label: "Home",     href: "/",         type: "route"  },
@@ -18,7 +20,7 @@ const NAV_LINKS = [
   },
 ];
 
-export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
+export default function Navbar({ user }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
   const [othersDropdown, setOthersDropdown] = useState(false);
@@ -55,11 +57,13 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
     return link.type === "route" ? location.pathname === link.href : false;
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    await signOut(auth);
     setUserDropdown(false);
     navigate("/");
   };
+
+  const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
 
   return (
     <>
@@ -137,7 +141,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
 
             {/* Desktop Auth Section */}
             <div className="hidden md:flex items-center gap-4">
-              {!isLoggedIn ? (
+              {!user ? (
                 <>
                   <Link to="/login" className="text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
                     Login
@@ -148,26 +152,27 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
                 </>
               ) : (
                 <div className="relative">
-                  <button 
+                  <button
                     onClick={() => setUserDropdown(!userDropdown)}
-                    className="flex items-center gap-2 bg-white border border-slate-100 p-1.5 pr-3 rounded-full hover:shadow-md transition-all cursor-pointer"
+                    className="flex items-center gap-2 bg-white border border-slate-100 p-1.5 pr-4 rounded-full hover:shadow-md transition-all cursor-pointer"
                   >
-                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-                      <User size={18} />
+                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
+                      {displayName.charAt(0).toUpperCase()}
                     </div>
-                    <ChevronDown size={14} className={`text-slate-400 transition-transform ${userDropdown ? 'rotate-180' : ''}`} />
+                    <span className="text-sm font-bold text-slate-700">Hello, {displayName.split(" ")[0]}</span>
+                    <ChevronDown size={14} className={`text-slate-400 transition-transform ${userDropdown ? "rotate-180" : ""}`} />
                   </button>
 
                   {userDropdown && (
-                    <div className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                      <button className="w-full px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-3">
-                        <User size={16} /> My Profile
-                      </button>
-                      <button 
+                    <div className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 overflow-hidden">
+                      <div className="px-4 py-2 border-b border-slate-100 mb-1">
+                        <p className="text-xs text-slate-400 font-medium truncate">{user.email}</p>
+                      </div>
+                      <button
                         onClick={handleLogout}
                         className="w-full px-4 py-3 text-left text-sm font-medium text-rose-600 hover:bg-rose-50 flex items-center gap-3"
                       >
-                        <LogOut size={16} /> Logout
+                        <LogOut size={16} /> Log Out
                       </button>
                     </div>
                   )}

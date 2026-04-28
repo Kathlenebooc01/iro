@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Navbar from "./components/navbar.jsx";
 import Home from "./pages/home.jsx";
 import Adopt from "./pages/adopt.jsx";
@@ -10,33 +10,36 @@ import Gallery from "./pages/gallery.jsx";
 import Donate from "./pages/donate.jsx";
 import Login from "./pages/login.jsx";
 import Signup from "./pages/signup.jsx";
+import { auth } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function App() {
-  // Replace with actual Firebase auth state later
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  if (authLoading) return null; // wait for auth to resolve before rendering
 
   return (
     <BrowserRouter>
-      {/* Pass login state and logout function to Navbar */}
-      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
-      
+      <Navbar user={user} />
       <Routes>
         <Route path="/" element={<Home />} />
-        
-        {/* Pass isLoggedIn to Adopt page to trigger the "Login Required" modal */}
-        <Route path="/adopt" element={<Adopt isLoggedIn={isLoggedIn} />} />
-        
+        <Route path="/adopt" element={<Adopt />} />
         <Route path="/events" element={<Events />} />
         <Route path="/aboutus" element={<AboutUs />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/donate" element={<Donate />} />
-        
-        {/* Auth Routes */}
-        <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-
-        {/* Catch-all redirect to Home */}
         <Route path="*" element={<Home />} />
       </Routes>
     </BrowserRouter>

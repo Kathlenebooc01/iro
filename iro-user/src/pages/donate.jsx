@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, CreditCard, Send, ShieldCheck, Copy, Check, X, PawPrint } from "lucide-react";
+import { auth } from "../firebase";
 
 // ── AUTH GATE MODAL ──────────────────────────────────────────
 function AuthGateModal({ onClose, onLogin, onSignup }) {
@@ -66,8 +67,8 @@ export default function Donate() {
   const [copied, setCopied] = React.useState("");
   const [showAuthGate, setShowAuthGate] = React.useState(false);
 
-  // Swap for your real auth check
-  const isLoggedIn = () => !!localStorage.getItem("token");
+  // Use Firebase auth to check login state
+  const isLoggedIn = () => !!auth.currentUser;
 
   const handleCopy = (text, label) => {
     if (!isLoggedIn()) {

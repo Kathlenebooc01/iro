@@ -7,9 +7,7 @@ import {
   Mail,
   Clock,
   Facebook,
-  Twitter,
   Instagram,
-  Youtube,
   ChevronRight,
   ArrowRight,
   Users,
@@ -30,6 +28,8 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import logo from "../assets/iro-logo.png";
+import { db, auth } from "../firebase";
+import { collection, onSnapshot } from "firebase/firestore";
 
 function RegistrationModal({ event, onClose }) {
   const [formData, setFormData] = useState({
@@ -358,24 +358,39 @@ function Container({ children, className = "" }) {
 }
 
 /* ─────────────────────────────────────────────
-   AUTH HELPER
-   Checks if the user is logged in.
-   Replace this with your real auth check
-   (e.g. checking a context, localStorage token, etc.)
-───────────────────────────────────────────── */
-function isUserLoggedIn() {
-  // Replace with your actual auth check, e.g.:
-  // return !!localStorage.getItem("authToken");
-  // return !!useAuthContext().user;
-  return false; // default: not logged in (change to your real logic)
-}
-
-/* ─────────────────────────────────────────────
    MAIN EXPORT
 ───────────────────────────────────────────── */
 export default function OcatteryHomepage() {
   const navigate = useNavigate();
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [cats, setCats] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  // Load cats from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "cats"), (snap) => {
+      setCats(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
+  }, []);
+
+  // Load events from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "events"), (snap) => {
+      setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
+  }, []);
+
+  // Auto-rotate hero cat every 4 seconds
+  useEffect(() => {
+    if (cats.length < 2) return;
+    const t = setInterval(() => setHeroIndex(i => (i + 1) % cats.length), 4000);
+    return () => clearInterval(t);
+  }, [cats.length]);
+
+  const heroCat = cats[heroIndex] || null;
 
   const [impactRef, impactInView] = useInView(0.3);
   const rescues   = useCounter(847,  2200, impactInView);
@@ -389,13 +404,10 @@ export default function OcatteryHomepage() {
     navigate("/adopt");
   };
 
-  // Donate → requires login; if not logged in, redirect to /login
-  // and pass the intended destination so login can redirect back
   const handleDonate = () => {
-    if (isUserLoggedIn()) {
+    if (auth.currentUser) {
       navigate("/donate");
     } else {
-      // Save where the user wanted to go so login/signup can redirect them there
       navigate("/login", { state: { from: "/donate" } });
     }
   };
@@ -540,43 +552,64 @@ export default function OcatteryHomepage() {
               </div>
             </div>
 
-            {/* Right — hero image card */}
+            {/* Right — hero image card (dynamic from Firestore) */}
             <div className="relative hidden lg:flex justify-center">
-              <div className="relative w-[380px] float">
-                <div className="rounded-[2.5rem] overflow-hidden shadow-2xl aspect-[4/5]">
-                  <img
-                    src="https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=760&h=950&fit=crop&auto=format"
-                    alt="Mochi — three-legged cat"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/85 to-transparent p-6">
-                    <p className="display text-white text-xl font-bold">Mochi</p>
-                    <p className="text-sky-300 text-sm font-medium">Three-legged · 2 yrs · Ready to adopt</p>
+              {heroCat ? (
+                <div className="relative w-[380px] float" key={heroCat.id}>
+                  <div className="rounded-[2.5rem] overflow-hidden shadow-2xl aspect-[4/5]">
+                    <img
+                      src={heroCat.img || "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=760&h=950&fit=crop&auto=format"}
+                      alt={heroCat.name}
+                      className="w-full h-full object-cover transition-all duration-700"
+                    />
+                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/85 to-transparent p-6">
+                      <p className="display text-white text-xl font-bold">{heroCat.name}</p>
+                      <p className="text-sky-300 text-sm font-medium">
+                        {heroCat.condition} · {heroCat.age} · {heroCat.status}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                {/* Floating badge — status */}
-                <div className="absolute -top-5 -right-8 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 float2">
-                  <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  {/* Status badge */}
+                  <div className="absolute -top-5 -right-8 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 float2">
+                    <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Status</p>
+                      <p className="text-sm font-bold text-slate-700">{heroCat.status}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Status</p>
-                    <p className="text-sm font-bold text-slate-700">Ready to adopt</p>
-                  </div>
-                </div>
 
-                {/* Floating badge — care */}
-                <div className="absolute -bottom-5 -left-8 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 float3">
-                  <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <Stethoscope className="w-4 h-4 text-blue-600" />
+                  {/* Care level badge */}
+                  <div className="absolute -bottom-5 -left-8 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 float3">
+                    <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <Stethoscope className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Care Level</p>
+                      <p className="text-sm font-bold text-slate-700">
+                        {heroCat.vaccinated && heroCat.dewormed ? "Fully vetted" : "In care"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Care Level</p>
-                    <p className="text-sm font-bold text-slate-700">Fully vetted</p>
-                  </div>
+
+                  {/* Dot indicators */}
+                  {cats.length > 1 && (
+                    <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2">
+                      {cats.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setHeroIndex(i)}
+                          className={`w-2 h-2 rounded-full transition-all ${i === heroIndex ? "bg-blue-600 w-5" : "bg-slate-300"}`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="w-[380px] aspect-[4/5] rounded-[2.5rem] bg-slate-100 animate-pulse" />
+              )}
             </div>
           </div>
         </Container>
@@ -601,41 +634,43 @@ export default function OcatteryHomepage() {
             <div className="relative">
               <div className="rounded-[2.5rem] overflow-hidden aspect-square shadow-xl">
                 <img
-                  src="https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=720&h=720&fit=crop&auto=format"
-                  alt="Shelter cats"
+                  src={heroCat?.img || "https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=720&h=720&fit=crop&auto=format"}
+                  alt={heroCat?.name || "Shelter cat"}
                   className="w-full h-full object-cover"
                 />
               </div>
 
-              {/* Feature pills — positioned relative to the image box */}
-              <div className="absolute top-8 -right-2 flex flex-col gap-3 max-w-[220px]">
-                {[
-                  { Icon: Stethoscope, label: "Specialist veterinary care", bg: "bg-blue-50",    icon: "text-blue-600"    },
-                  { Icon: Heart,       label: "Behavioral therapy",         bg: "bg-rose-50",    icon: "text-rose-500"    },
-                  { Icon: ShieldCheck, label: "Fully vaccinated & chipped", bg: "bg-emerald-50", icon: "text-emerald-600" },
-                ].map(({ Icon, label, bg, icon }, i) => (
-                  <div key={i} className="bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${bg}`}>
-                      <Icon className={`w-4 h-4 ${icon}`} />
+              {/* Dynamic medical info pills from admin data */}
+              {heroCat && (
+                <div className="absolute top-8 -right-2 flex flex-col gap-3 max-w-[220px]">
+                  {[
+                    heroCat.vaccinated && { Icon: ShieldCheck, label: "Vaccinated", bg: "bg-emerald-50", icon: "text-emerald-600" },
+                    heroCat.dewormed   && { Icon: Stethoscope, label: "Dewormed",   bg: "bg-blue-50",    icon: "text-blue-600"    },
+                    heroCat.microchipped && { Icon: Activity,  label: "Microchipped", bg: "bg-purple-50", icon: "text-purple-600" },
+                  ].filter(Boolean).slice(0, 3).map(({ Icon, label, bg, icon }, i) => (
+                    <div key={i} className="bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${bg}`}>
+                        <Icon className={`w-4 h-4 ${icon}`} />
+                      </div>
+                      <p className="text-slate-700 text-xs font-medium leading-snug">{label}</p>
                     </div>
-                    <p className="text-slate-700 text-xs font-medium leading-snug">{label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Founder card */}
-              <div className="absolute -bottom-6 -left-4 bg-white rounded-2xl shadow-2xl p-4 flex items-center gap-4">
-                <img
-                  src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=120&h=120&fit=crop&auto=format"
-                  alt="Dr. Lena Sorrell"
-                  className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
-                />
-                <div>
-                  <p className="font-bold text-slate-800 text-sm">Dr. Lena Sorrell</p>
-                  <p className="text-sky-600 text-xs font-medium">Founder & Head Veterinarian</p>
-                  <p className="text-slate-400 text-xs mt-0.5">Est. 2015</p>
+                  ))}
                 </div>
-              </div>
+              )}
+
+              {/* Cat info card */}
+              {heroCat && (
+                <div className="absolute -bottom-6 -left-4 bg-white rounded-2xl shadow-2xl p-4 flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
+                    <img src={heroCat.img} alt={heroCat.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800 text-sm">{heroCat.name}</p>
+                    <p className="text-sky-600 text-xs font-medium">{heroCat.condition}</p>
+                    <p className="text-slate-400 text-xs mt-0.5">{heroCat.status}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Text side */}
@@ -797,18 +832,21 @@ export default function OcatteryHomepage() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {CATS.map((cat, i) => {
-              const CondIcon = cat.conditionIcon;
+            {cats.slice(0, 4).map((cat, i) => {
+              const statusColor =
+                cat.status === "Ready to Adopt" ? "bg-emerald-100 text-emerald-700" :
+                cat.status === "In Rehabilitation" ? "bg-amber-100 text-amber-700" :
+                "bg-sky-100 text-sky-700";
               return (
-                <div key={i} className="card-lift bg-white rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 cursor-pointer group">
+                <div key={cat.id || i} className="card-lift bg-white rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 cursor-pointer group">
                   <div className="aspect-square overflow-hidden relative">
                     <img
-                      src={cat.img}
+                      src={cat.img || "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400&h=400&fit=crop&auto=format"}
                       alt={cat.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 left-3">
-                      <span className={`text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm ${cat.statusColor}`}>
+                      <span className={`text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm ${statusColor}`}>
                         {cat.status}
                       </span>
                     </div>
@@ -816,13 +854,9 @@ export default function OcatteryHomepage() {
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="display text-xl font-bold text-slate-800">{cat.name}</h3>
-                      <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <CondIcon className="w-3.5 h-3.5 text-blue-500" />
-                      </div>
                     </div>
                     <p className="text-blue-600 text-xs font-semibold mb-1">{cat.condition} · {cat.age}</p>
-                    <p className="text-slate-400 text-xs mb-5">{cat.personality}</p>
-                    {/* ── Learn More → /adopt ── */}
+                    <p className="text-slate-400 text-xs mb-5 line-clamp-1">{cat.personality}</p>
                     <button
                       onClick={handleAdopt}
                       className="btn-blue text-white text-xs font-semibold px-4 py-2.5 rounded-xl w-full flex items-center justify-center gap-1 cursor-pointer"
@@ -833,6 +867,15 @@ export default function OcatteryHomepage() {
                 </div>
               );
             })}
+            {cats.length === 0 && [0,1,2,3].map(i => (
+              <div key={i} className="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm animate-pulse">
+                <div className="aspect-square bg-slate-100" />
+                <div className="p-5 space-y-2">
+                  <div className="h-4 bg-slate-100 rounded w-2/3" />
+                  <div className="h-3 bg-slate-100 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
           </div>
         </Container>
       </Section>
@@ -847,41 +890,45 @@ export default function OcatteryHomepage() {
               <SectionLabel>Join Us</SectionLabel>
               <h2 className="display text-4xl md:text-5xl font-bold text-slate-800">Upcoming Events</h2>
             </div>
-            <button className="btn-ghost font-semibold px-6 py-3 rounded-2xl text-sm flex items-center gap-2 self-start md:self-auto">
+            <button
+              onClick={() => navigate("/events")}
+              className="btn-ghost font-semibold px-6 py-3 rounded-2xl text-sm flex items-center gap-2 self-start md:self-auto"
+            >
               All Events <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
           <div className="space-y-4">
-            {EVENTS.map((ev, i) => {
-              const EvIcon = ev.icon;
+            {events.slice(0, 3).map((ev, i) => {
+              const typeColor =
+                ev.type === "Adoption" ? "bg-emerald-100 text-emerald-700" :
+                ev.type === "Volunteer" ? "bg-sky-100 text-sky-700" :
+                ev.type === "Fundraiser" ? "bg-amber-100 text-amber-700" :
+                "bg-blue-100 text-blue-700";
+              const EvIcon =
+                ev.type === "Volunteer" ? Users :
+                ev.type === "Fundraiser" ? HandHeart :
+                PawPrint;
               return (
-                <div key={i} className="card-lift bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex gap-5 items-center cursor-pointer">
-                  {/* Date badge */}
+                <div key={ev.id || i} className="card-lift bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex gap-5 items-center cursor-pointer">
                   <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-sky-100 to-blue-100 rounded-2xl flex flex-col items-center justify-center">
                     <p className="display text-xl font-bold text-blue-700 leading-none">{ev.day}</p>
                     <p className="text-blue-400 text-[10px] font-bold uppercase tracking-wider mt-0.5">{ev.month}</p>
                   </div>
-
-                  {/* Event type icon */}
                   <div className="flex-shrink-0 w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center">
                     <EvIcon className="w-5 h-5 text-slate-500" />
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <h3 className="font-bold text-slate-800 text-base">{ev.title}</h3>
-                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide ${ev.typeColor}`}>
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide ${typeColor}`}>
                         {ev.type}
                       </span>
                     </div>
-                    <p className="text-slate-400 text-sm">{ev.desc}</p>
+                    <p className="text-slate-400 text-sm">{ev.description}</p>
                   </div>
-
-                  {/* CTA */}
                   <div className="flex-shrink-0 hidden md:block">
-                    <button 
+                    <button
                       onClick={() => setSelectedEvent(ev)}
                       className="btn-blue text-white text-xs font-semibold px-5 py-2.5 rounded-xl flex items-center gap-1.5 cursor-pointer"
                     >
@@ -891,6 +938,9 @@ export default function OcatteryHomepage() {
                 </div>
               );
             })}
+            {events.length === 0 && (
+              <div className="text-center py-12 text-slate-400 text-sm">No upcoming events yet.</div>
+            )}
           </div>
         </Container>
       </Section>
@@ -976,10 +1026,15 @@ export default function OcatteryHomepage() {
                 A nonprofit shelter dedicated to rescuing and rehabilitating cats with disabilities since 2015. Every cat is extraordinary.
               </p>
               <div className="flex gap-2">
-                {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
+                {[
+                  { Icon: Facebook,  href: "https://www.facebook.com/profile.php?id=100064674974636" },
+                  { Icon: Instagram, href: "https://www.instagram.com/o_iro_cattery/" },
+                ].map(({ Icon, href }, i) => (
                   <a
                     key={i}
-                    href="#"
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="w-9 h-9 bg-slate-800 hover:bg-blue-600 rounded-xl flex items-center justify-center transition-colors"
                   >
                     <Icon className="w-4 h-4 text-slate-400" />
@@ -1018,10 +1073,10 @@ export default function OcatteryHomepage() {
               <p className="text-white font-semibold text-sm mb-5">Get in Touch</p>
               <div className="space-y-4">
                 {[
-                  { Icon: Mail,   label: "Email",          value: "hello@ocattery.org",            href: "mailto:hello@ocattery.org", cls: "text-sky-400 hover:text-sky-300" },
-                  { Icon: Phone,  label: "Phone",          value: "+1 (503) 294-8812",             href: "tel:+15032948812",          cls: "text-slate-300" },
-                  { Icon: MapPin, label: "Address",        value: "128 Willow Lane, Portland, OR", href: "#",                         cls: "text-slate-300" },
-                  { Icon: Clock,  label: "Visiting Hours", value: "Mon–Sat · 10am – 5pm",          href: null,                        cls: "text-slate-300" },
+                  { Icon: Mail,   label: "Email",          value: "irorescue@gmail.com",                        href: "mailto:irorescue@gmail.com",  cls: "text-sky-400 hover:text-sky-300" },
+                  { Icon: Phone,  label: "Phone",          value: "09270621080",                                href: "tel:09270621080",              cls: "text-slate-300" },
+                  { Icon: MapPin, label: "Address",        value: "P.Basubas, Tipolo Mandaue City, 6014",       href: "#",                            cls: "text-slate-300" },
+                  { Icon: Clock,  label: "Visiting Hours", value: "Mon–Sat · 10am – 5pm",                       href: null,                           cls: "text-slate-300" },
                 ].map(({ Icon, label, value, href, cls }, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
