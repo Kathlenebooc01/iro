@@ -129,11 +129,15 @@ function AnimatedSection({ children, delay = 0 }) {
 /* ─────────────────────────────────────────────
    DATA
 ───────────────────────────────────────────── */
+// Calculate years since 2015
+const currentYear = new Date().getFullYear();
+const yearsSince2015 = currentYear - 2015;
+
 const STATS = [
-  { label: "Cats Rescued", value: "847+", sub: "Since 2015", icon: PawPrint },
-  { label: "Successful Adoptions", value: "612+", sub: "Happy forever homes", icon: Heart },
-  { label: "Years of Service", value: "9 yrs", sub: "And counting", icon: Star },
-  { label: "Families Helped", value: "2400+", sub: "Across the country", icon: Users },
+  { label: "Cats Rescued", value: "300+", sub: "Since 2015", icon: PawPrint },
+  { label: "Successful Adoptions", value: "100+", sub: "Happy forever homes", icon: Heart },
+  { label: "Years of Service", value: `${yearsSince2015} yrs`, sub: "And counting", icon: Star },
+  { label: "Families Helped", value: "100+", sub: "Across the country", icon: Users },
 ];
 
 const TEAM = [
@@ -177,7 +181,7 @@ export default function AboutUs() {
       <section className="pt-32 pb-20 px-6 text-center relative overflow-hidden">
         <AnimatedSection>
           <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-[10px] font-bold px-4 py-2 rounded-full mb-8 tracking-[0.2em] uppercase border border-blue-100">
-            <History className="w-3.5 h-3.5" /> Est. 2013
+            <History className="w-3.5 h-3.5" /> Est. 2015
           </div>
           <h1 className="display-font text-5xl md:text-7xl font-bold text-slate-900 mb-8 leading-[1.1]">
             Small Compassion, <br />
@@ -198,23 +202,45 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* Mission/Vision */}
+      {/* Mission */}
       <section className="py-20 px-6 max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-slate-900 rounded-[3rem] p-12 text-white relative overflow-hidden">
-            <Shield className="w-12 h-12 text-blue-400 mb-8 opacity-50" />
-            <h2 className="display-font text-3xl font-bold mb-6">Our Mission</h2>
-            <p className="text-slate-400 leading-relaxed text-lg">
-              To rescue and rehabilitate cats with special needs, proving that differently-abled cats make extraordinary companions.
+        <div className="bg-slate-900 rounded-[3rem] p-12 text-white relative overflow-hidden">
+          <Shield className="w-12 h-12 text-blue-400 mb-8 opacity-50" />
+          <h2 className="display-font text-3xl font-bold mb-6">Our Mission</h2>
+          <div className="text-slate-300 leading-relaxed text-base space-y-4">
+            <p className="text-lg font-semibold text-white">
+              The mission of IRO, Island Rescue Organization Inc., shall be:
             </p>
-          </div>
-
-          <div className="glass-card rounded-[3rem] p-12 border-blue-100">
-            <Target className="w-12 h-12 text-blue-600 mb-8 opacity-50" />
-            <h2 className="display-font text-3xl font-bold text-slate-900 mb-6">Our Vision</h2>
-            <p className="text-slate-500 leading-relaxed text-lg">
-              A Philippines where no cat is abandoned because of disability—where blind eyes do not diminish a cat's capacity for love.
-            </p>
+            <ul className="space-y-3 ml-6">
+              <li className="flex gap-3">
+                <span className="text-blue-400 font-bold">1.</span>
+                <span>To promote responsible ownership and humane treatment of all animals through cooperation, outreach, and education.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-blue-400 font-bold">2.</span>
+                <span>To promote a symbiotic relationship between animals and humans pursuant to the laws of the Philippines.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-blue-400 font-bold">3.</span>
+                <span>To advocate the development and enforcement of humane and effective animal welfare laws.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-blue-400 font-bold">4.</span>
+                <span>To rescue abused, abandoned, neglected, and tortured animals.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-blue-400 font-bold">5.</span>
+                <span>To provide a healthy, loving, truly no-kill sanctuary for these animals.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-blue-400 font-bold">6.</span>
+                <span>To promote fostering of these animals while waiting for adoptions.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-blue-400 font-bold">7.</span>
+                <span>To promote adoptions of these animals in loving, forever homes.</span>
+              </li>
+            </ul>
           </div>
         </div>
       </section>

@@ -15,7 +15,6 @@ const NAV_LINKS = [
     items: [
       { label: "About Us", href: "/aboutus" },
       { label: "Contact", href: "/contact" },
-      { label: "Gallery", href: "/gallery" },
     ]
   },
 ];

@@ -257,34 +257,6 @@ const CATS = [
   },
 ];
 
-const GALLERY = [
-  {
-    label: "First steps after surgery",
-    img: "https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=700&h=700&fit=crop&auto=format",
-    className: "col-span-2 row-span-2",
-  },
-  {
-    label: "Therapy & recovery",
-    img: "https://images.unsplash.com/photo-1615789591457-74a63395c990?w=400&h=400&fit=crop&auto=format",
-    className: "",
-  },
-  {
-    label: "Meeting forever families",
-    img: "https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=400&fit=crop&auto=format",
-    className: "",
-  },
-  {
-    label: "Learning to play again",
-    img: "https://images.unsplash.com/photo-1519052537078-e6302a4968d4?w=400&h=400&fit=crop&auto=format",
-    className: "",
-  },
-  {
-    label: "Volunteer care moments",
-    img: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=400&h=400&fit=crop&auto=format",
-    className: "",
-  },
-];
-
 const EVENTS = [
   {
     day: "22", month: "Feb",
@@ -392,10 +364,14 @@ export default function OcatteryHomepage() {
 
   const heroCat = cats[heroIndex] || null;
 
+  // Calculate years since 2015 dynamically
+  const currentYear = new Date().getFullYear();
+  const yearsSince2015 = currentYear - 2015;
+
   const [impactRef, impactInView] = useInView(0.3);
-  const rescues   = useCounter(847,  2200, impactInView);
-  const adoptions = useCounter(612,  2000, impactInView);
-  const years     = useCounter(9,    1400, impactInView);
+  const rescues   = useCounter(300,  2200, impactInView);
+  const adoptions = useCounter(100,  2000, impactInView);
+  const years     = useCounter(yearsSince2015, 1400, impactInView);
 
   /* ── Navigation handlers ── */
 
@@ -466,11 +442,6 @@ export default function OcatteryHomepage() {
           transform: translateY(-6px);
           box-shadow: 0 24px 48px rgba(14,100,180,.13);
         }
-        .gallery-card .overlay {
-          opacity: 0;
-          transition: opacity .35s ease;
-        }
-        .gallery-card:hover .overlay { opacity: 1; }
         .gradient-text {
           background: linear-gradient(135deg, #2563eb, #0ea5e9);
           -webkit-background-clip: text;
@@ -681,10 +652,10 @@ export default function OcatteryHomepage() {
                 <span className="display italic gradient-text">built with purpose.</span>
               </h2>
               <p className="text-slate-500 text-base leading-relaxed mb-5">
-                Ocattery began in 2015 when veterinarian Dr. Lena Sorrell rescued her first three-legged cat from a roadside. She quickly realized that disabled cats were consistently overlooked in shelters — despite having just as much love to give.
+                The Island Rescue Organization (IRO) expanded its reach in 2015 by founding Ocattery, a dedicated branch born out of a specific need to champion feline welfare. Since its inception, Ocattery has focused its energy entirely on the rescue and rehabilitation of cats.
               </p>
               <p className="text-slate-500 text-base leading-relaxed mb-10">
-                Today, we operate a full-service rehabilitation shelter with specialized medical staff, behavioral therapists, and a passionate volunteer community. We don't just rescue cats. We rebuild their lives.
+                By creating a specialized space for feline rescue, the organization ensures that rescue cats receive the dedicated care they need while actively bridging the gap between stray felines and adoptive families seeking a new companion.
               </p>
 
               <div className="flex gap-10">
@@ -705,52 +676,69 @@ export default function OcatteryHomepage() {
       </Section>
 
       {/* ══════════════════════════════════════
-          MISSION & VISION
+          MISSION
       ══════════════════════════════════════ */}
       <Section className="w-full bg-gradient-to-b from-sky-50/60 to-slate-50 py-28">
         <Container>
           <div className="text-center mb-16">
             <SectionLabel>Our Purpose</SectionLabel>
-            <h2 className="display text-4xl md:text-5xl font-bold text-slate-800">Mission & Vision</h2>
+            <h2 className="display text-4xl md:text-5xl font-bold text-slate-800">Our Mission</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="max-w-5xl mx-auto">
             {/* Mission */}
-            <div className="card-lift bg-white rounded-[2rem] p-10 border border-slate-100 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-50 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-              <div className="relative">
-                <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
-                  <Heart className="w-6 h-6 text-blue-600" />
-                </div>
-                <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-blue-400 mb-3">Mission</p>
-                <h3 className="display text-2xl font-bold text-slate-800 mb-4">Rescue. Rehabilitate. Rehome.</h3>
-                <p className="text-slate-500 leading-relaxed text-sm">
-                  To provide compassionate, evidence-based care to cats with physical and sensory disabilities — ensuring every animal receives the medical attention, emotional support, and love they deserve before finding a permanent home.
-                </p>
-              </div>
-            </div>
-
-            {/* Vision */}
-            <div className="card-lift bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-[2rem] p-10 relative overflow-hidden shadow-lg">
+            <div className="card-lift bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-[2.5rem] p-10 md:p-12 relative overflow-hidden shadow-xl">
               <div
                 className="absolute inset-0 opacity-10 pointer-events-none"
                 style={{ backgroundImage: "radial-gradient(circle at 75% 20%, white 0%, transparent 55%)" }}
               />
               <div className="relative">
                 <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
-                  <Sparkles className="w-6 h-6 text-white" />
+                  <Heart className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-blue-200 mb-3">Vision</p>
-                <h3 className="display text-2xl font-bold text-white mb-4">A world that sees ability, not disability.</h3>
-                <p className="text-blue-100 leading-relaxed text-sm">
-                  We envision a future where no cat is euthanized or abandoned due to a disability — where communities embrace difference, and every animal is valued for the joy and companionship they bring.
-                </p>
+                <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-blue-200 mb-6">Mission</p>
+                <h3 className="display text-2xl md:text-3xl font-bold text-white mb-6">
+                  Island Rescue Organization Inc.
+                </h3>
+                <div className="text-blue-50 leading-relaxed text-sm md:text-base space-y-4">
+                  <p className="font-semibold text-white mb-4">The mission of IRO shall be:</p>
+                  <ul className="space-y-3">
+                    <li className="flex gap-3">
+                      <span className="text-blue-300 font-bold flex-shrink-0">1.</span>
+                      <span>To promote responsible ownership and humane treatment of all animals through cooperation, outreach, and education.</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-blue-300 font-bold flex-shrink-0">2.</span>
+                      <span>To promote a symbiotic relationship between animals and humans pursuant to the laws of the Philippines.</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-blue-300 font-bold flex-shrink-0">3.</span>
+                      <span>To advocate the development and enforcement of humane and effective animal welfare laws.</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-blue-300 font-bold flex-shrink-0">4.</span>
+                      <span>To rescue abused, abandoned, neglected, and tortured animals.</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-blue-300 font-bold flex-shrink-0">5.</span>
+                      <span>To provide a healthy, loving, truly no-kill sanctuary for these animals.</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-blue-300 font-bold flex-shrink-0">6.</span>
+                      <span>To promote fostering of these animals while waiting for adoptions.</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-blue-300 font-bold flex-shrink-0">7.</span>
+                      <span>To promote adoptions of these animals in loving, forever homes.</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Values row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 max-w-5xl mx-auto">
             {[
               { Icon: HandHeart,   label: "Compassion", desc: "At the core of all we do"  },
               { Icon: Stethoscope, label: "Expertise",  desc: "Specialist veterinary care" },
@@ -973,18 +961,6 @@ export default function OcatteryHomepage() {
                 Every donation — big or small — funds surgeries, rehabilitation, food, and shelter for cats who have nowhere else to turn. Help us keep our doors open for the ones who need us most.
               </p>
 
-              <div className="flex flex-wrap justify-center gap-3 mb-10">
-                {["$10", "$25", "$50", "$100", "Custom"].map((amt) => (
-                  <button
-                    key={amt}
-                    onClick={handleDonate}
-                    className="bg-white/15 hover:bg-white/25 border border-white/25 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all cursor-pointer"
-                  >
-                    {amt}
-                  </button>
-                ))}
-              </div>
-
               <div className="flex flex-wrap justify-center gap-4">
                 {/* ── Donate Now → requires login ── */}
                 <button
@@ -992,13 +968,6 @@ export default function OcatteryHomepage() {
                   className="bg-white text-blue-700 font-bold px-10 py-4 rounded-2xl text-sm hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 inline-flex items-center gap-2 cursor-pointer"
                 >
                   <Heart className="w-4 h-4" fill="#1d4ed8" /> Donate Now
-                </button>
-                {/* ── Monthly Giving → also requires login ── */}
-                <button
-                  onClick={handleDonate}
-                  className="border-2 border-white/40 text-white font-semibold px-8 py-4 rounded-2xl text-sm hover:border-white transition-all inline-flex items-center gap-2 cursor-pointer"
-                >
-                  <CalendarDays className="w-4 h-4" /> Monthly Giving
                 </button>
               </div>
 
@@ -1052,7 +1021,6 @@ export default function OcatteryHomepage() {
                   { label: "Donate",      action: handleDonate },
                   { label: "Volunteer",   action: null },
                   { label: "Events",      action: null },
-                  { label: "Gallery",     action: null },
                   { label: "Contact Us",  action: null },
                 ].map(({ label, action }) => (
                   <li key={label}>

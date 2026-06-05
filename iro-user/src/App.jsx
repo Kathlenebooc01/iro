@@ -6,7 +6,6 @@ import Adopt from "./pages/adopt.jsx";
 import Events from "./pages/events.jsx";
 import AboutUs from "./pages/aboutus.jsx";
 import Contact from "./pages/contact.jsx";
-import Gallery from "./pages/gallery.jsx";
 import Donate from "./pages/donate.jsx";
 import Login from "./pages/login.jsx";
 import Signup from "./pages/signup.jsx";
@@ -36,7 +35,6 @@ export default function App() {
         <Route path="/events" element={<Events />} />
         <Route path="/aboutus" element={<AboutUs />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/gallery" element={<Gallery />} />
         <Route path="/donate" element={<Donate />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

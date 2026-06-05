@@ -80,8 +80,8 @@ export default function Contact() {
       label: "PayPal",
       color: "text-indigo-600",
       bg: "bg-indigo-50",
-      value: "ironrescue@gmail.com",
-      copyValue: "ironrescue@gmail.com",
+      value: "irorescue@gmail.com",
+      copyValue: "irorescue@gmail.com",
       detail: "For international donors",
     },
     {
@@ -138,9 +138,9 @@ export default function Contact() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Us</p>
-                <p className="font-bold text-slate-900 truncate">ironrescue@gmail.com</p>
+                <p className="font-bold text-slate-900 truncate">irorescue@gmail.com</p>
               </div>
-              <CopyButton text="ironrescue@gmail.com" />
+              <CopyButton text="irorescue@gmail.com" />
             </div>
 
             {/* TikTok Card */}

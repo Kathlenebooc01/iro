@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PawPrint, Heart, Star, Activity, Eye, Volume2,
@@ -54,14 +54,14 @@ const STEPS = [
     num: "01",
     Icon: Search,
     title: "Browse & Connect",
-    desc: "Explore our cats, read their stories, and find the one who speaks to your heart.",
+    desc: "Explore our cats, read their stories, and find the one who speaks to your heart. We only cater face-to-face applications for adoption.",
     color: "from-sky-400 to-blue-500",
   },
   {
     num: "02",
     Icon: FileText,
-    title: "Submit an Application",
-    desc: "Fill out our simple adoption form. It takes about 10 minutes and helps us find the perfect match.",
+    title: "Contact Us",
+    desc: "Reach out to us to express your interest. We'll guide you through the process and answer any questions.",
     color: "from-blue-500 to-indigo-600",
   },
   {
@@ -111,11 +111,21 @@ function Container({ children, className = "" }) {
   );
 }
 
-function Section({ children, className = "", delay = 0 }) {
+const Section = forwardRef(({ children, className = "", delay = 0, id }, forwardedRef) => {
   const [ref, inView] = useInView(0.07);
   return (
     <section
-      ref={ref}
+      ref={(node) => {
+        ref.current = node;
+        if (forwardedRef) {
+          if (typeof forwardedRef === 'function') {
+            forwardedRef(node);
+          } else {
+            forwardedRef.current = node;
+          }
+        }
+      }}
+      id={id}
       style={{ transitionDelay: `${delay}ms` }}
       className={`transition-all duration-700 ease-out ${
         inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -124,7 +134,7 @@ function Section({ children, className = "", delay = 0 }) {
       {children}
     </section>
   );
-}
+});
 
 // ── AUTH GATE MODAL ──────────────────────────────────────────
 function AuthGateModal({ onClose, onLogin, onSignup }) {
@@ -341,6 +351,7 @@ export default function AdoptPage() {
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [cats, setCats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const processRef = useRef(null);
 
   // Real-time listener from Firestore — same collection the admin writes to
   useEffect(() => {
@@ -438,10 +449,17 @@ export default function AdoptPage() {
                   <PawPrint className="w-4 h-4" />
                   Meet Our Cats
                 </a>
-                <a href="#process" className="btn-ghost font-semibold px-8 py-4 rounded-2xl text-sm flex items-center gap-2">
+                <button 
+                  onClick={() => {
+                    if (processRef.current) {
+                      processRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="btn-ghost font-semibold px-8 py-4 rounded-2xl text-sm flex items-center gap-2 cursor-pointer"
+                >
                   <ClipboardList className="w-4 h-4" />
                   How It Works
-                </a>
+                </button>
               </div>
             </div>
 
@@ -466,7 +484,7 @@ export default function AdoptPage() {
                 </div>
                 <div>
                   <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Adopted</p>
-                  <p className="text-sm font-bold text-slate-700">612+ cats</p>
+                  <p className="text-sm font-bold text-slate-700">100+ cats</p>
                 </div>
               </div>
               <div className="absolute left-24 top-8 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 float2">
@@ -556,7 +574,7 @@ export default function AdoptPage() {
       </Section>
 
       {/* ADOPTION PROCESS */}
-      <Section id="process" className="w-full bg-gradient-to-b from-sky-50/60 to-slate-50 py-24">
+      <Section ref={processRef} id="process" className="w-full bg-gradient-to-b from-sky-50/60 to-slate-50 py-24">
         <Container>
           <div className="text-center mb-16">
             <SectionLabel>Simple Steps</SectionLabel>
@@ -595,7 +613,7 @@ export default function AdoptPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { Icon: ShieldCheck, label: "All cats fully vetted",  val: "100%", color: "text-emerald-600", bg: "bg-emerald-50" },
-              { Icon: Heart,       label: "Successful adoptions",   val: "612+", color: "text-rose-500",   bg: "bg-rose-50"    },
+              { Icon: Heart,       label: "Successful adoptions",   val: "100+", color: "text-rose-500",   bg: "bg-rose-50"    },
               { Icon: Users,       label: "Volunteer caregivers",   val: "40+",  color: "text-blue-600",   bg: "bg-blue-50"    },
               { Icon: Clock,       label: "Post-adoption support",  val: "1 yr", color: "text-indigo-600", bg: "bg-indigo-50"  },
             ].map(({ Icon, label, val, color, bg }, i) => (
